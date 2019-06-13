@@ -11,9 +11,32 @@ class Imagenes
 	public $ruta="http://localhost:8080/api/api.php";
 	public $rutaarchivos="../archivos/";
 
-	public function BuscarImagen($Nombre)
+	public function BuscarImagen()
 	{
-		# code...
+		if (isset($_POST['nombre']) && $_POST['nombre'] != '')
+		{
+			$Configuracion = array(
+           					'nombre'=>$_POST['nombre'],
+           					'request'=>"DescargarImagen",                            
+    		);
+
+    		$Consulta=$this->Conectar($Configuracion,'POST');
+
+    		if (count($Consulta)>0)
+			{
+				$Respuesta = array('respuesta' =>'La imagen existe');
+  				echo json_encode($Respuesta);
+			}
+			else{
+				$Respuesta = array('respuesta' =>'La imagen no existe');
+  				echo json_encode($Respuesta);
+			}
+		}
+		else
+		{
+			$Respuesta = array('respuesta' =>'El nombre es nesesario');
+  			echo json_encode($Respuesta);
+		}
 	}
 
 	public function GuardarImagen()
@@ -48,12 +71,51 @@ class Imagenes
   					echo json_encode($Respuesta);
 				}				
 			}
+			else
+			{
+			$Respuesta = array('respuesta' =>'El archivo es nesesario');
+  			echo json_encode($Respuesta);
+			}
 		}
+		else
+		{
+			$Respuesta = array('respuesta' =>'El nombre es nesesario');
+  			echo json_encode($Respuesta);
+		}     
+	}
 
-		
+	public  function DescargarImagen()
+	{
+		if (isset($_POST['nombredescarga']) && $_POST['nombredescarga'] != '')
+		{  
+			$Configuracion = array(
+           					'nombre'=>$_POST['nombredescarga'],
+           					'request'=>"DescargarImagen",                            
+    				);
+			$Consulta=$this->Conectar($Configuracion,'POST');
+			
+			if (count($Consulta)>0)
+			{
+				$enlace = $Consulta[0]['rutaimagen'];
+				$nombre=$_POST['nombredescarga'];
+				$extensiones=explode(".", $enlace);
+				$ext=array_pop($extensiones);
+				header ("Content-Disposition: attachment; filename=".$nombre.".".$ext." ");
+				header ("Content-Type: application/octet-stream");
+				header ("Content-Length: ".filesize($enlace));
+				readfile($enlace);
+			}
+			else
+			{
+				header('Location: ../index.php');
+			}
+		} 
 
-
-      
+		else
+		{
+  			$Respuesta = array('respuesta' =>'El nombre es nesesario');
+  			echo json_encode($Respuesta);
+		}		
 	}
 
 	protected function Conectar($Parametros,$Metodo)
@@ -61,7 +123,7 @@ class Imagenes
         $ch = curl_init($this->ruta);
 
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            //establecemos el verbo http que queremos utilizar para la petición
+            
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $Metodo);
 
         curl_setopt($ch, CURLOPT_POSTFIELDS,http_build_query($Parametros));
@@ -72,14 +134,10 @@ class Imagenes
         //$response = utf8_encode($response);
         curl_close($ch);
        if($response)
-       { 
-         //print_r($response);
+       {         
             $Datos=json_decode($response,true);
-
             return $Datos;
-       }   
-               
-            
+       }         
     }
 	
 }
@@ -90,12 +148,12 @@ switch ($_POST['accion'])
 {
 	case 'BuscarImagen':
 	$imagen = new Imagenes();
-	$imagen->BuscarImagen($_POST['nombre']);		
+	$imagen->BuscarImagen();		
 	break;
 
-	case 'DescargaImagen':
+	case 'DescargarImagen':
 	$imagen = new Imagenes();
-	$imagen->BuscarImagen($_POST['nombre']);		
+	$imagen->DescargarImagen();		
 	break;
 
 	case 'GuardarImagen':
@@ -105,7 +163,7 @@ switch ($_POST['accion'])
 	
 	default:
 		# code...
-		break;
+	break;
 }
 
 ?>

@@ -20,3 +20,20 @@ $(document).ready(function() {
         return false;
     });
 });
+
+function respuesta(){
+    var formData = new FormData();
+    formData.append('nombre', $("#nombreimg").val());
+    formData.append('accion','BuscarImagen');
+    $.ajax({
+        url: 'controllers/imagenes.php',
+        type: 'post',
+        data: formData,
+        contentType: false,
+        processData: false,
+        dataType: "json",
+        success: function(data) {
+            alert(data.respuesta);
+            }
+        });
+}
